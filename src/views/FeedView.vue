@@ -51,7 +51,7 @@ export default {
     const user = ref(null);
     const currentPage = ref(1);
     const pageSize = 5;
-    const sortBy = ref('newest'); // Default sort by newest
+    const sortBy = ref('newest'); 
 
     const totalPages = computed(() => Math.ceil(posts.value.length / pageSize));
     const paginatedPosts = computed(() => {

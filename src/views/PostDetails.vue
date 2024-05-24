@@ -60,11 +60,11 @@
       const post = ref(null);
       const newComment = ref('');
       const loading = ref(true);
-      const liked = ref(false); // Like state
-      const commentsPerPage = 5; // Number of comments per page
-      const allCommentsLoaded = ref(false); // All comments loaded state
-      const currentPage = ref(0); // Current page for comments
-      const paginatedComments = ref([]); // Paginated comments
+      const liked = ref(false); 
+      const commentsPerPage = 5; 
+      const allCommentsLoaded = ref(false);
+      const currentPage = ref(0); 
+      const paginatedComments = ref([]); 
   
       const postId = route.params.id;
   
@@ -94,7 +94,6 @@
           const response = await axios.get(`https://swinconnectserver-production.up.railway.app/posts/${postId}`);
           post.value = response.data;
   
-          // Fetch comments and likes for the post
           const commentsResponse = await axios.get('https://swinconnectserver-production.up.railway.app/comments', {
             params: { postId: postId }
           });
@@ -105,7 +104,6 @@
           });
           post.value.likes = likesResponse.data || [];
           
-          // Check if the current user has liked the post
           const user = JSON.parse(localStorage.getItem('user'));
           liked.value = post.value.likes.some(like => like.userId === user.id);
         } catch (error) {
@@ -128,14 +126,12 @@
             });
             post.value.likes = post.value.likes.filter(like => like.userId !== user.id);
           } else {
-            // Like post
             await axios.post('https://swinconnectserver-production.up.railway.app/like', {
               postId: post.value.id,
               userId: user.id
             });
             post.value.likes.push({ userId: user.id });
           }
-          // Toggle the liked state
           liked.value = !liked.value;
         } catch (error) {
           console.error('Failed to toggle like:', error);
@@ -150,7 +146,7 @@
             userId: user.id,
             content: newComment.value
           });
-          post.value.comments.push(response.data); // Optimistically update the comments
+          post.value.comments.push(response.data); 
           newComment.value = '';
         } catch (error) {
           console.error('Failed to add comment:', error);
@@ -189,8 +185,4 @@
   };
   </script>
   
-  
-  <style scoped>
-  /* Add your styles here */
-  </style>
-  
+ 

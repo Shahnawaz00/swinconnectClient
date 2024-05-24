@@ -25,14 +25,13 @@
 <script>
 import axios from 'axios';
 import { ref, computed } from 'vue';
-// import { useRouter } from 'vue-router';
 
 export default {
   setup() {
     const name = ref('');
     const email = ref('');
     const password = ref('');
-    // const router = useRouter();
+
     const nameTouched = ref(false);
     const emailTouched = ref(false);
     const passwordTouched = ref(false);

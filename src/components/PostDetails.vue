@@ -54,16 +54,13 @@
         const response = await axios.get(`https://swinconnectserver-production.up.railway.app/posts/${props.id}`);
         post.value = response.data;
 
-        // Initialize likes as an empty array
         post.value.likes = [];
 
-        // Fetch comments for the post
         const commentsResponse = await axios.get('https://swinconnectserver-production.up.railway.app/comments', {
             params: { postId: props.id }
         });
         post.value.comments = commentsResponse.data;
 
-        // Fetch likes for the post
         const likesResponse = await axios.get('https://swinconnectserver-production.up.railway.app/likes', {
             params: { postId: props.id }
         });
@@ -81,7 +78,7 @@
             postId: post.value.id,
             userId: user.id
           });
-          post.value.likes.push({ userId: user.id }); // Optimistically update the likes
+          post.value.likes.push({ userId: user.id }); 
         } catch (error) {
           console.error('Failed to like post:', error);
         }
@@ -95,7 +92,7 @@
             userId: user.id,
             content: newComment.value
           });
-          post.value.comments.push(response.data); // Optimistically update the comments
+          post.value.comments.push(response.data); 
           newComment.value = '';
         } catch (error) {
           console.error('Failed to add comment:', error);
@@ -121,8 +118,4 @@
     }
   };
   </script>
-  
-  <style scoped>
-  /* Add your styles here */
-  </style>
   

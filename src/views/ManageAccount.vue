@@ -53,14 +53,12 @@ export default {
 
 
     const checkPasswordMatch = () => {
-      // Check if passwords match
       passwordsMatch.value = password.value === confirmPassword.value;
     };
 
     const saveChanges = async () => {
       try {
         if (!passwordsMatch.value) {
-          // Passwords don't match
           console.error('Passwords do not match');
           return;
         }
@@ -81,12 +79,11 @@ export default {
     };
 
     const cancelEdit = () => {
-      // Reset the form fields
       newname.value = user.value.name;
       newEmail.value = user.value.email;
       password.value = '';
       confirmPassword.value = '';
-      passwordsMatch.value = true; // Reset passwords match status
+      passwordsMatch.value = true; 
       editMode.value = false;
     };
 
