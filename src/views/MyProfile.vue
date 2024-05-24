@@ -57,7 +57,7 @@
           <div class="card" @click="goToUserProfile(user.id)">
             <div class="card-body">
               <h5 class="card-title">{{ user.name }}</h5>
-              <h5 class="card-text">{{ user.email }}</h5>
+              <p class="card-text">{{ user.email }}</p>
               <button class="btn btn-primary" @click.stop="unfollowUser(user.id)">Unfollow</button>
             </div>
           </div>
@@ -73,11 +73,11 @@
         <div class="col-md-4" v-if="likedPosts.length > 0">
           <PostComponent
             v-for="post in likedPosts" 
-            :key="post.post.id"
-            :post="post.post"
+            :key="post.id"
+            :post="post"
             :userId="userId"
-            @update-likes="updateLikedPosts"
-            @update-comments="updateLikedComments"
+            @update-likes="updatePostLikes"
+            @update-comments="updatePostComments"
           />
         </div>
         <div v-else >
@@ -214,35 +214,43 @@ export default {
     };
 
     const fetchLikedPosts = async () => {
-      try {
-        const response = await axios.get('https://swinconnectserver-production.up.railway.app/liked-posts', {
-          params: { userId: userId.value }
-        });
-        likedPosts.value = response.data;
+  try {
+    const response = await axios.get('https://swinconnectserver-production.up.railway.app/liked-posts', {
+      params: { userId: userId.value }
+    });
 
-        for (const post of likedPosts.value) {
-          const [commentsResponse, likesResponse] = await Promise.all([
-            axios.get('https://swinconnectserver-production.up.railway.app/comments', {
-              params: { postId: post.id }
-            }),
-            axios.get('https://swinconnectserver-production.up.railway.app/likes', {
-              params: { postId: post.id }
-            })
-          ]);
+    const likedPostsData = response.data.map(data => data.post);
 
-          post.comments = commentsResponse.data;
-          post.likes = likesResponse.data;
-        }
-      } catch (error) {
-        console.error('Failed to fetch liked posts:', error);
-      }
-    };
+    for (const post of likedPostsData) {
+      const [commentsResponse, likesResponse] = await Promise.all([
+        axios.get('https://swinconnectserver-production.up.railway.app/comments', {
+          params: { postId: post.id }
+        }),
+        axios.get('https://swinconnectserver-production.up.railway.app/likes', {
+          params: { postId: post.id }
+        })
+      ]);
+
+      post.comments = commentsResponse.data;
+      post.likes = likesResponse.data;
+    }
+
+    likedPosts.value = likedPostsData;
+  } catch (error) {
+    console.error('Failed to fetch liked posts:', error);
+  }
+  };
 
 
     const updatePostLikes = (postId, likes) => {
       const post = posts.value.find(p => p.id === postId);
       if (post) {
         post.likes = likes;
+      }
+    
+      const likedPost = likedPosts.value.find(p => p.id === postId);
+      if (likedPost) {
+        likedPost.likes = likes;
       }
     };
 
@@ -251,19 +259,10 @@ export default {
       if (post) {
         post.comments = comments;
       }
-    };
-
-    const updateLikedPosts = (postId, likes) => {
-      const postIndex = likedPosts.value.findIndex(p => p.post.id === postId);
-      if (postIndex !== -1) {
-        likedPosts.value[postIndex].post.likes = likes;
-      }
-    };
-
-    const updateLikedComments = (postId, comments) => {
-      const postIndex = likedPosts.value.findIndex(p => p.post.id === postId);
-      if (postIndex !== -1) {
-        likedPosts.value[postIndex].post.comments = comments;
+    
+      const likedPost = likedPosts.value.find(p => p.id === postId);
+      if (likedPost) {
+        likedPost.comments = comments;
       }
     };
 
@@ -296,8 +295,6 @@ export default {
       unfollowUser,
       isFollowed,
       followedUsersList,
-      updateLikedPosts,
-      updateLikedComments
     };
   }
 };
