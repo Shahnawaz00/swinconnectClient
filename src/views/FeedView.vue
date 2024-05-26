@@ -4,8 +4,8 @@
     <div class="mb-3">
       <label for="sortSelect" class="form-label">Sort By:</label>
       <select class="form-select" id="sortSelect" v-model="sortBy" @change="sortPosts">
-        <option value="newest">Newest to Oldest</option>
         <option value="oldest">Oldest to Newest</option>
+        <option value="newest">Newest to Oldest</option>
       </select>
     </div>
     <div class="loading" v-if="isLoading">
@@ -53,7 +53,7 @@ export default {
     const user = ref(null);
     const currentPage = ref(1);
     const pageSize = 5;
-    const sortBy = ref('newest');
+    const sortBy = ref('oldest');
     const isLoading = ref(false); // Added isLoading reactive reference
 
     const totalPages = computed(() => Math.ceil(posts.value.length / pageSize));
