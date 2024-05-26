@@ -19,7 +19,9 @@
     </nav>
     <div v-if="activeTab === 'posts'" class="mt-5">
       <h2>Your Posts</h2>
-      <div class="row" v-if="posts.length > 0">
+      <div class="loading" v-if="isLoadingPosts">
+      </div>
+      <div class="row" v-else-if="posts.length > 0">
         <div class="col-md-6" v-for="post in posts" :key="post.id">
           <PostComponent
             :post="post"
@@ -52,7 +54,9 @@
     </div>
     <div v-if="activeTab === 'followed'" class="mt-5">
       <h2>Followed Accounts</h2>
-      <div v-if="followedUsersList.length > 0" class="row">
+      <div class="loading" v-if="isLoadingFollowedUsers">
+      </div>
+      <div v-else-if="followedUsersList.length > 0" class="row">
         <div v-for="user in followedUsersList" :key="user.id" class="col-md-4 mb-3">
           <div class="card" @click="goToUserProfile(user.id)">
             <div class="card-body">
@@ -69,7 +73,9 @@
     </div>
     <div v-if="activeTab === 'liked'" class="mt-5">
       <h2>Liked Posts</h2>
-      <div class="row">
+      <div class="loading" v-if="isLoadingLikedPosts">
+      </div>
+      <div class="row" v-else>
         <div class="col-md-5" v-if="likedPosts.length > 0">
           <PostComponent
             v-for="post in likedPosts" 
@@ -112,8 +118,13 @@ export default {
     const user = JSON.parse(localStorage.getItem('user'));
     const userId = ref(user ? user.id : null);
 
+    const isLoadingPosts = ref(false);
+    const isLoadingFollowedUsers = ref(false);
+    const isLoadingLikedPosts = ref(false);
+
     const fetchPosts = async () => {
       try {
+        isLoadingPosts.value = true;
         const response = await axios.get('https://swinconnectserver-production.up.railway.app/user-posts', {
           params: { userId: userId.value }
         });
@@ -136,6 +147,8 @@ export default {
         posts.value = postsData;
       } catch (error) {
         console.error('Failed to fetch posts:', error);
+      } finally {
+        isLoadingPosts.value = false;
       }
     };
 
@@ -156,6 +169,7 @@ export default {
 
     const fetchFollowedUsers = async () => {
       try {
+        isLoadingFollowedUsers.value = true;
         const response = await axios.get('https://swinconnectserver-production.up.railway.app/followed-users', {
           params: { userId: userId.value }
         });
@@ -163,13 +177,14 @@ export default {
         filterFollowedUsers();
       } catch (error) {
         console.error('Failed to fetch followed users:', error);
+      } finally {
+        isLoadingFollowedUsers.value = false;
       }
     };
 
     const filterFollowedUsers = () => {
       followedUsersList.value = users.value.filter(user => followedUsers.value.includes(user.id));
     };
-
 
     const allUsers = async () => {
       try {
@@ -214,33 +229,35 @@ export default {
     };
 
     const fetchLikedPosts = async () => {
-  try {
-    const response = await axios.get('https://swinconnectserver-production.up.railway.app/liked-posts', {
-      params: { userId: userId.value }
-    });
+      try {
+        isLoadingLikedPosts.value = true;
+        const response = await axios.get('https://swinconnectserver-production.up.railway.app/liked-posts', {
+          params: { userId: userId.value }
+        });
 
-    const likedPostsData = response.data.map(data => data.post);
+        const likedPostsData = response.data.map(data => data.post);
 
-    for (const post of likedPostsData) {
-      const [commentsResponse, likesResponse] = await Promise.all([
-        axios.get('https://swinconnectserver-production.up.railway.app/comments', {
-          params: { postId: post.id }
-        }),
-        axios.get('https://swinconnectserver-production.up.railway.app/likes', {
-          params: { postId: post.id }
-        })
-      ]);
+        for (const post of likedPostsData) {
+          const [commentsResponse, likesResponse] = await Promise.all([
+            axios.get('https://swinconnectserver-production.up.railway.app/comments', {
+              params: { postId: post.id }
+            }),
+            axios.get('https://swinconnectserver-production.up.railway.app/likes', {
+              params: { postId: post.id }
+            })
+          ]);
 
-      post.comments = commentsResponse.data;
-      post.likes = likesResponse.data;
-    }
+          post.comments = commentsResponse.data;
+          post.likes = likesResponse.data;
+        }
 
-    likedPosts.value = likedPostsData;
-  } catch (error) {
-    console.error('Failed to fetch liked posts:', error);
-  }
-  };
-
+        likedPosts.value = likedPostsData;
+      } catch (error) {
+        console.error('Failed to fetch liked posts:', error);
+      } finally {
+        isLoadingLikedPosts.value = false;
+      }
+    };
 
     const updatePostLikes = (postId, likes) => {
       const post = posts.value.find(p => p.id === postId);
@@ -275,7 +292,6 @@ export default {
       fetchFollowedUsers();
       fetchLikedPosts();
       allUsers();
-
     });
 
     return {
@@ -287,6 +303,9 @@ export default {
       likedPosts,
       createdPostId,
       userId,
+      isLoadingPosts,
+      isLoadingFollowedUsers,
+      isLoadingLikedPosts,
       createPost,
       updatePostLikes,
       updatePostComments,
@@ -310,5 +329,21 @@ export default {
 }
 .card {
   cursor: pointer;
+}
+.loading {
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  border: 3px solid #1D3D6F;
+  border-radius: 50%;
+  border-top: 3px solid #fff;
+  animation: spin 1s ease-in-out infinite;
+  margin: 20px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

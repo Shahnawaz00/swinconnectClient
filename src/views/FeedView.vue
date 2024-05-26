@@ -8,7 +8,9 @@
         <option value="oldest">Oldest to Newest</option>
       </select>
     </div>
-    <div v-if="paginatedPosts.length > 0">
+    <div class="loading" v-if="isLoading">
+    </div>
+    <div v-else-if="paginatedPosts.length > 0">
       <PostComponent
         v-for="post in paginatedPosts"
         :key="post.id"
@@ -51,7 +53,8 @@ export default {
     const user = ref(null);
     const currentPage = ref(1);
     const pageSize = 5;
-    const sortBy = ref('newest'); 
+    const sortBy = ref('newest');
+    const isLoading = ref(false); // Added isLoading reactive reference
 
     const totalPages = computed(() => Math.ceil(posts.value.length / pageSize));
     const paginatedPosts = computed(() => {
@@ -61,6 +64,7 @@ export default {
 
     const fetchFollowedPosts = async () => {
       try {
+        isLoading.value = true; // Set isLoading to true before fetching
         const storedUser = JSON.parse(localStorage.getItem('user'));
         if (storedUser) {
           user.value = storedUser;
@@ -80,6 +84,8 @@ export default {
         }
       } catch (error) {
         console.error('Failed to fetch posts:', error);
+      } finally {
+        isLoading.value = false; // Set isLoading to false after fetching
       }
     };
 
@@ -112,6 +118,7 @@ export default {
         currentPage.value--;
       }
     };
+
     const sortPosts = () => {
       posts.value.sort((a, b) => {
         const dateA = new Date(a.date);
@@ -123,8 +130,8 @@ export default {
         }
       });
     };
-    watch(sortBy, sortPosts);
 
+    watch(sortBy, sortPosts);
 
     onMounted(() => {
       fetchFollowedPosts();
@@ -141,8 +148,29 @@ export default {
       updatePostComments,
       sortPosts,
       sortBy,
-      user
+      user,
+      isLoading 
     };
   }
 };
 </script>
+
+<style>
+.loading {
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  border: 3px solid #1D3D6F;
+  border-radius: 50%;
+  border-top: 3px solid #fff;
+  animation: spin 1s ease-in-out infinite;
+  margin: 20px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+</style>
