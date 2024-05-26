@@ -1,43 +1,40 @@
-
-  <template>
+<template>
     <div class="container mt-5" v-if="post">
-        
-        <div class="d-flex justify-content-between">
-            <button @click="goBack" class="btn btn-secondary">Go Back</button>
-            <!-- Only show the delete button if the post belongs to the logged-in user -->
-            <button v-if="isOwner" @click="deletePost" class="btn btn-danger">Delete</button>
-        </div>
-        <div class="card mt-5">
-          <div class="card-body">
-            <div class="d-flex justify-content-between">
-              <h1 class="card-title">{{ post.title }}</h1>
-              <span>{{ new Date(post.date).toLocaleDateString() }}</span> 
-              
-            </div>
-            <p class="card-text">{{ post.content }}</p>
-            <div class="d-flex justify-content-between">
-              <button @click="toggleLike" class="btn btn-primary">{{ liked ? 'Unlike' : 'Like' }}</button> 
-              <span>{{ post.likes.length }} Likes</span>
-            </div>
+      <div class="d-flex justify-content-between">
+        <button @click="goBack" class="btn btn-secondary">Go Back</button>
+        <!-- Only show the delete button if the post belongs to the logged-in user -->
+        <button v-if="isOwner" @click="deletePost" class="btn btn-danger">Delete</button>
+      </div>
+      <div class="card mt-5">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <h1 class="card-title">{{ post.title }}</h1>
+            <span>{{ new Date(post.date).toLocaleDateString() }}</span>
+          </div>
+          <p class="card-text">{{ post.content }}</p>
+          <div class="d-flex justify-content-between">
+            <button @click="toggleLike" class="btn btn-primary">{{ liked ? 'Unlike' : 'Like' }}</button>
+            <span>{{ post.likes.length }} Likes</span>
           </div>
         </div>
-          <div class="mt-5">
-            <h2>Comments</h2>
-            <div class="mt-5">
-              <form @submit.prevent="addComment">
-                <div class="mb-3">
-                  <textarea class="form-control" v-model="newComment" required></textarea>
-                </div>
-                <button type="submit" class="btn btn-secondary">Add Comment</button>
-              </form>
+      </div>
+      <div class="mt-5">
+        <h2>Comments</h2>
+        <div class="mt-5">
+          <form @submit.prevent="addComment">
+            <div class="mb-3">
+              <textarea class="form-control" v-model="newComment" required></textarea>
             </div>
+            <button type="submit" class="btn btn-secondary">Add Comment</button>
+          </form>
+        </div>
         <div v-if="post.comments && post.comments.length > 0">
-          <div v-for="comment in paginatedComments" :key="comment.id" class="card mt-3"> <!-- Paginated comments -->
+          <div v-for="comment in paginatedComments" :key="comment.id" class="card mt-3">
             <div class="card-body" v-if="comment.user">
               <p><strong>{{ comment.user.name }}:</strong> {{ comment.content }}</p>
             </div>
           </div>
-          <button @click="loadMore" v-if="!allCommentsLoaded" class="btn btn-secondary mt-3" >Load more comments</button> <!-- Load more button -->
+          <button @click="loadMore" v-if="!allCommentsLoaded" class="btn btn-secondary mt-3">Load more comments</button>
         </div>
         <div v-else>
           <p>No comments yet.</p>
@@ -60,34 +57,31 @@
       const post = ref(null);
       const newComment = ref('');
       const loading = ref(true);
-      const liked = ref(false); 
-      const commentsPerPage = 5; 
+      const liked = ref(false);
+      const commentsPerPage = 5;
       const allCommentsLoaded = ref(false);
-      const currentPage = ref(0); 
-      const paginatedComments = ref([]); 
+      const currentPage = ref(1);
+      const paginatedComments = ref([]);
   
       const postId = route.params.id;
   
       const goBack = () => {
         router.go(-1);
       };
-
+  
       const isOwner = computed(() => {
-      const user = JSON.parse(localStorage.getItem('user'));
-      if (post.value.authorId === user.id) {
-        return true;
-      }
-      return false;
-    });
-
-    const deletePost = async () => {
-      try {
-        await axios.delete(`https://swinconnectserver-production.up.railway.app/posts/${postId}`);
-        router.go(-1);
-      } catch (error) {
-        console.error('Failed to delete post:', error);
-      }
-    };
+        const user = JSON.parse(localStorage.getItem('user'));
+        return post.value.authorId === user.id;
+      });
+  
+      const deletePost = async () => {
+        try {
+          await axios.delete(`https://swinconnectserver-production.up.railway.app/posts/${postId}`);
+          router.go(-1);
+        } catch (error) {
+          console.error('Failed to delete post:', error);
+        }
+      };
   
       const fetchPostDetails = async () => {
         try {
@@ -98,18 +92,21 @@
             params: { postId: postId }
           });
           post.value.comments = commentsResponse.data || [];
+          post.value.comments.sort((a, b) => b.id - a.id); 
   
           const likesResponse = await axios.get('https://swinconnectserver-production.up.railway.app/likes', {
             params: { postId: postId }
           });
           post.value.likes = likesResponse.data || [];
-          
+  
           const user = JSON.parse(localStorage.getItem('user'));
           liked.value = post.value.likes.some(like => like.userId === user.id);
+  
+          loadInitialComments();
         } catch (error) {
           console.error('Failed to fetch post details:', error);
         } finally {
-          loading.value = false; 
+          loading.value = false;
         }
       };
   
@@ -146,20 +143,36 @@
             userId: user.id,
             content: newComment.value
           });
-          post.value.comments.push(response.data); 
-          newComment.value = '';
+
+        response.data.user = { name: user.name };
+          // Add the new comment to the beginning of both post comments and paginatedComments
+        post.value.comments.unshift(response.data);
+        paginatedComments.value.unshift(response.data);
+        console.log(response.data, post.value.comments, paginatedComments.value)
+
+        // Check if all comments are loaded
+        allCommentsLoaded.value = paginatedComments.value.length >= post.value.comments.length;
+          
+        newComment.value = '';
         } catch (error) {
           console.error('Failed to add comment:', error);
         }
       };
   
+      const loadInitialComments = () => {
+        currentPage.value = 1;
+        paginatedComments.value = post.value.comments.slice(0, commentsPerPage);
+        allCommentsLoaded.value = paginatedComments.value.length >= post.value.comments.length;
+        console.log(post.value.comments, paginatedComments.value)
+      };
+  
       const loadMore = () => {
-        const loadedComments = post.value.comments.slice(0, commentsPerPage * (currentPage.value + 1));
-        if (loadedComments.length === post.value.comments.length) {
+        const nextPageComments = post.value.comments.slice(0, commentsPerPage * (currentPage.value + 1));
+        currentPage.value++;
+        paginatedComments.value = nextPageComments;
+        if (paginatedComments.value.length >= post.value.comments.length) {
           allCommentsLoaded.value = true;
         }
-        currentPage.value++;
-        paginatedComments.value = loadedComments;
       };
   
       onMounted(() => {
@@ -169,7 +182,7 @@
       return {
         post,
         newComment,
-        toggleLike, 
+        toggleLike,
         addComment,
         loading,
         liked,
@@ -185,4 +198,4 @@
   };
   </script>
   
- 
+  

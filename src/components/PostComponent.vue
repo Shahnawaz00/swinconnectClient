@@ -2,18 +2,17 @@
   <div class="card mt-3" @click="viewPostDetails">
     <div class="card-body">
       <div class="d-flex justify-content-between">
+            <!-- <strong>{{ post.user.id }}</strong> -->
             <h5 class="card-title">{{ post.title }}</h5>
             <span>{{ new Date(post.date).toLocaleDateString() }}</span> 
-          </div>
-      <p class="card-text">{{ post.content }}</p>
+      </div>
+      <p class="card-text">{{ post.content.slice(0, 100) }}{{ post.content.length > 100 ? '...' : '' }}</p>
       <div class="d-flex justify-content-between align-items-center">
         <button @click.stop="viewPostDetails" class="btn btn-primary">View Post</button> 
-
         <div>
           <span class="m-3">{{ localLikes.length }} Likes</span>
          <span>{{ localComments.length }} Comments</span>
         </div>
-        
       </div>
     </div>
   </div>
@@ -69,7 +68,6 @@ export default {
     };
 
     const viewComments = () => {
-      // Redirect to the post details page with comments expanded
       router.push({ path: `/post/${props.post.id}`, query: { comments: true } });
     };
 
@@ -91,6 +89,4 @@ export default {
 };
 </script>
 
-<style scoped>
-/* Add your styles here */
-</style>
+

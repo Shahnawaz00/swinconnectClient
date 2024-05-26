@@ -5,13 +5,11 @@
         <div class="input-group">
           <label class="input-group-text" for="categoryDropdown">Category</label>
           <select class="form-select" id="categoryDropdown" v-model="selectedCategory" @change="fetchNewsArticles">
-            <option value="general">General</option>
-            <option value="business">Business</option>
-            <option value="entertainment">Entertainment</option>
-            <option value="health">Health</option>
-            <option value="science">Science</option>
-            <option value="sports">Sports</option>
-            <option value="technology">Technology</option>
+            <option value="world">World news</option>
+            <option value="us-news">US News</option>
+            <option value="australia-news">Australia News</option>
+            <option value="football">Football</option>
+            <option value="lifeandstyle">Life and Style</option>
           </select>
         </div>
       </div>
@@ -38,8 +36,6 @@
     </div>
   </div>
 </div>
-
-
         <nav aria-label="Pagination" class="mt-5">
           <ul class="pagination justify-content-center">
             <li class="page-item" :class="{ 'disabled': currentPage === 1 }">
@@ -62,27 +58,31 @@
   
   export default {
     setup() {
-      const articles = ref([]);
-      const loading = ref(true);
-      const selectedCategory = ref('general');
-      const currentPage = ref(1);
-      const pageSize = 3;
-  
-      const fetchNewsArticles = async () => {
-        const apiKey = '669a924e50c54bb7b49b4f3bca7e3c14';
-        const apiUrl = `https://newsapi.org/v2/top-headlines?country=us&category=${selectedCategory.value}&apiKey=${apiKey}`;
-  
-        try {
-          const response = await fetch(apiUrl);
-          const data = await response.json();
-          articles.value = data.articles;
-          loading.value = false;
-        } catch (error) {
-          console.error('Error fetching news articles:', error);
-          loading.value = false;
-        }
-      };
-  
+        const articles = ref([]);
+    const loading = ref(true);
+    const selectedCategory = ref('world');
+    const currentPage = ref(1);
+    const pageSize = 3;
+
+    const fetchNewsArticles = async () => {
+      const apiKey = '405932a0-b89e-491b-b63a-2a17629dd00d'; // your Guardian API key
+      const apiUrl = `https://content.guardianapis.com/${selectedCategory.value}?api-key=${apiKey}`;
+
+      try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        articles.value = data.response.results.map(article => ({
+          title: article.webTitle,
+          description: article.webTitle, // Guardian API doesn't provide a description, using title as placeholder
+          url: article.webUrl,
+          urlToImage: null, // Guardian API doesn't provide image URLs in the basic tier
+        }));
+        loading.value = false;
+      } catch (error) {
+        console.error('Error fetching news articles:', error);
+        loading.value = false;
+      }
+    };
       const totalPages = computed(() => Math.ceil(articles.value.length / pageSize));
       const paginatedArticles = computed(() => {
         const startIndex = (currentPage.value - 1) * pageSize;

@@ -20,7 +20,7 @@
     <div v-if="activeTab === 'posts'" class="mt-5">
       <h2>Your Posts</h2>
       <div class="row" v-if="posts.length > 0">
-        <div class="col-md-4" v-for="post in posts" :key="post.id">
+        <div class="col-md-6" v-for="post in posts" :key="post.id">
           <PostComponent
             :post="post"
             :userId="userId"
@@ -58,7 +58,7 @@
             <div class="card-body">
               <h5 class="card-title">{{ user.name }}</h5>
               <p class="card-text">{{ user.email }}</p>
-              <button class="btn btn-primary" @click.stop="unfollowUser(user.id)">Unfollow</button>
+              <button class="btn btn-primary" @click.stop="unfollowUser(user.id)"> - Unfollow</button>
             </div>
           </div>
         </div>
@@ -70,7 +70,7 @@
     <div v-if="activeTab === 'liked'" class="mt-5">
       <h2>Liked Posts</h2>
       <div class="row">
-        <div class="col-md-4" v-if="likedPosts.length > 0">
+        <div class="col-md-5" v-if="likedPosts.length > 0">
           <PostComponent
             v-for="post in likedPosts" 
             :key="post.id"

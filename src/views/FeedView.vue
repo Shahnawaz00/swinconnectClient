@@ -39,7 +39,7 @@
 
 <script>
 import axios from 'axios';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import PostComponent from '@/components/PostComponent.vue';
 
 export default {
@@ -112,14 +112,19 @@ export default {
         currentPage.value--;
       }
     };
-
     const sortPosts = () => {
-      if (sortBy.value === 'newest') {
-        posts.value.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      } else {
-        posts.value.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-      }
+      posts.value.sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        if (sortBy.value === 'newest') {
+          return dateB - dateA;
+        } else {
+          return dateA - dateB;
+        }
+      });
     };
+    watch(sortBy, sortPosts);
+
 
     onMounted(() => {
       fetchFollowedPosts();

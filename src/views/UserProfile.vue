@@ -38,13 +38,16 @@
       };
 
       const userId = route.params.userId;
+      const users = ref([]);
       const user = ref({});
       const posts = ref([]);
   
       const fetchUserProfile = async () => {
         try {
-          const response = await axios.get(`https://swinconnectserver-production.up.railway.app/users/${userId}`);
-          user.value = response.data;
+          const response = await axios.get(`https://swinconnectserver-production.up.railway.app/users`);
+          users.value = response.data;
+
+          user.value = users.value.find(u => u.id === parseInt(userId));
         } catch (error) {
           console.error('Failed to fetch user profile:', error);
         }

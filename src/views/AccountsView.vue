@@ -10,8 +10,8 @@
             <div class="card-body">
               <h5 class="card-title">{{ user.name }}</h5>
               <p class="card-text">{{ user.email }}</p>
-              <button v-if="isFollowed(user.id)" class="btn btn-primary" @click.stop="unfollowUser(user.id)">Unfollow</button>
-              <button v-else class="btn btn-primary" @click.stop="followUser(user.id)">Follow</button>
+              <button v-if="isFollowed(user.id)" class="btn btn-primary" @click.stop="unfollowUser(user.id)"> - Unfollow</button>
+              <button v-else class="btn btn-primary" @click.stop="followUser(user.id)"> + Follow</button>
             </div>
           </div>
         </div>
