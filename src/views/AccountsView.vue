@@ -101,7 +101,7 @@ export default {
     };
 
     const isFollowed = (userId) => {
-      return followedUsers.value.includes(userId); // Check if user is followed
+      return followedUsers.value.includes(userId);
     };
 
     const goToUserProfile = (userId) => {

@@ -1,20 +1,30 @@
 <template>
     <div class="container">
+      <div v-if="!loading">
         <button @click="goBack" class="btn btn-secondary mt-5">Go Back</button>
-      <h1 class="mt-5">{{ user.name }}'s Profile</h1>
-      <h2 class="mt-4">Posts</h2>
-      <div v-if="posts.length > 0">
-        <PostComponent
-          v-for="post in posts"
-          :key="post.id"
-          :post="post"
-          :userId="userId"
-          @update-likes="updatePostLikes"
-          @update-comments="updatePostComments"
-        />
+        <h1 class="mt-5">{{ user.name }}'s Profile</h1>
+        <h2 class="mt-4">Posts</h2>
+        <div v-if="!postsLoading">
+          <div v-if="posts.length > 0">
+            <PostComponent
+              v-for="post in posts"
+              :key="post.id"
+              :post="post"
+              :userId="userId"
+              @update-likes="updatePostLikes"
+              @update-comments="updatePostComments"
+            />
+          </div>
+          <div v-else>
+            <p>This user has not made any posts yet.</p>
+          </div>
+        </div>
+        <div v-else>
+          <div class="posts-loading"></div>
+        </div>
       </div>
       <div v-else>
-        <p>This user has not made any posts yet.</p>
+        <div class="loading"></div>
       </div>
     </div>
   </template>
@@ -32,11 +42,13 @@
     setup() {
       const route = useRoute();
       const router = useRouter();
-
+      const loading = ref(true);
+      const postsLoading = ref(true);
+  
       const goBack = () => {
         router.go(-1);
       };
-
+  
       const userId = route.params.userId;
       const users = ref([]);
       const user = ref({});
@@ -46,8 +58,8 @@
         try {
           const response = await axios.get(`https://swinconnectserver-production.up.railway.app/users`);
           users.value = response.data;
-
           user.value = users.value.find(u => u.id === parseInt(userId));
+          loading.value = false;
         } catch (error) {
           console.error('Failed to fetch user profile:', error);
         }
@@ -60,7 +72,6 @@
           });
           const postsData = response.data;
   
-          // Fetch comments and likes for each post
           for (const post of postsData) {
             const [commentsResponse, likesResponse] = await Promise.all([
               axios.get('https://swinconnectserver-production.up.railway.app/comments', {
@@ -76,6 +87,7 @@
           }
   
           posts.value = postsData;
+          postsLoading.value = false;
         } catch (error) {
           console.error('Failed to fetch user posts:', error);
         }
@@ -100,8 +112,38 @@
         fetchUserPosts();
       });
   
-      return { user, posts, updatePostLikes, updatePostComments, goBack};
+      return { user, posts, updatePostLikes, updatePostComments, goBack, loading, postsLoading };
     }
   };
   </script>
+  
+  <style>
+  .loading {
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    border: 3px solid #1D3D6F;
+    border-radius: 50%;
+    border-top: 3px solid #fff;
+    animation: spin 1s ease-in-out infinite;
+    margin: 20px auto;
+  }
+  
+  .posts-loading {
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    border: 3px solid #1D3D6F;
+    border-radius: 50%;
+    border-top: 3px solid #fff;
+    animation: spin 1s ease-in-out infinite;
+    margin: 20px auto;
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  </style>
   
